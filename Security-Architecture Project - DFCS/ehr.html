@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SecureHealth Portal | EHR</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+  <div class="dashboard-header">
+    <div>
+      <h2>Electronic Health Records (EHR)</h2>
+      <p class="role-tag">Patient Medical Records</p>
+    </div>
+
+    <button onclick="window.location.href='dashboard.html'" class="logout-btn">
+      Back
+    </button>
+  </div>
+
+
+  <table class="logs-table">
+
+    <thead>
+      <tr>
+        <th>Patient</th>
+        <th>Condition History</th>
+        <th>Assigned Doctor</th>
+        <th>Last Updated</th>
+      </tr>
+    </thead>
+
+
+    <tbody>
+
+      <tr>
+        <td>Muhammad Ali</td>
+        <td>Type 2 Diabetes</td>
+        <td>Dr. Ahmed Khan</td>
+        <td>05 July 2026</td>
+      </tr>
+
+
+      <tr>
+        <td>Hassan Raza</td>
+        <td>Hypertension (High Blood Pressure)</td>
+        <td>Dr. Sara Ahmed</td>
+        <td>28 June 2026</td>
+      </tr>
+
+
+      <tr>
+        <td>Usman Tariq</td>
+        <td>Asthma</td>
+        <td>Dr. Bilal Shah</td>
+        <td>02 July 2026</td>
+      </tr>
+
+    </tbody>
+
+  </table>
+
+</div>
+
+
+<script>
+
+const role = sessionStorage.getItem('role');
+const allowedRoles = ['Doctor', 'Admin'];
+
+if (!role || !allowedRoles.includes(role)) {
+
+document.querySelector('.dashboard-container').innerHTML = `
+
+<div class="dashboard-header">
+
+<h2>Electronic Health Records (EHR)</h2>
+
+<button onclick="window.location.href='dashboard.html'" class="logout-btn">
+Back
+</button>
+
+</div>
+
+<p class="no-access-msg">
+Access Denied. You do not have permission to view EHR.
+</p>
+
+`;
+
+}
+function saveAccessLog(email, role, action) {
+  const logs = JSON.parse(localStorage.getItem('accessLogs')) || [];
+
+  logs.push({
+    email: email,
+    role: role,
+    action: action,
+    time: new Date().toLocaleString()
+  });
+
+  localStorage.setItem('accessLogs', JSON.stringify(logs));
+}
+const email = sessionStorage.getItem("email");
+
+function saveAccessLog(email, role, action) {
+  const logs = JSON.parse(localStorage.getItem("accessLogs")) || [];
+
+  logs.push({
+    email: email,
+    role: role,
+    action: action,
+    time: new Date().toLocaleString()
+  });
+
+  localStorage.setItem("accessLogs", JSON.stringify(logs));
+}
+
+let timer;
+
+function resetTimer() {
+  clearTimeout(timer);
+
+  timer = setTimeout(function () {
+    saveAccessLog(email, role, "Auto Logout");
+    sessionStorage.clear();
+    window.location.href = "index.html";
+  }, 30000);
+}
+
+document.addEventListener("mousemove", resetTimer);
+document.addEventListener("click", resetTimer);
+document.addEventListener("keydown", resetTimer);
+document.addEventListener("scroll", resetTimer);
+
+resetTimer();
+</script>
+
+
+</body>
+</html>

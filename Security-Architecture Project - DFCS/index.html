@@ -1,0 +1,142 @@
+<!DOCTYPE html>      
+<html lang="en">     
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SecureHealth Portal | Login</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="login-container">
+    <div class="logo"><span>Secure Health Hospital</span></div>
+    <p class="subtitle">Zero Trust Access Portal</p>
+
+    
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="username">Email</label>
+        <input type="text" id="username" placeholder="Enter your email" required>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Enter your password" required>
+      </div>
+
+      <div class="options">
+        <label><input type="checkbox" id="remember"> Remember device</label>
+        <a href="#">Forgot password?</a>
+      </div>
+
+      <button type="submit" class="login-btn">Login </button>
+      <p class="error-msg" id="errorMsg"></p>
+    </form>
+
+    
+    <form id="otpForm" style="display:none;">
+      <div class="form-group">
+        <label for="otp">Enter OTP</label>
+        <input type="password" id="otp" placeholder="6-digit OTP" maxlength="6" required>
+      </div>
+      <p style="font-size:12px; color:#555; margin-bottom:15px;">
+        OTP sent to your Email ID. Please check your inbox
+      </p>
+      <button type="submit" class="login-btn">Verify</button>
+      <p class="error-msg" id="otpErrorMsg"></p>
+    </form>
+
+    <div class="footer-note">
+      This session is continuously verified under Zero Trust policy.<br>
+      <span class="badge">🔒 MFA Enabled</span>
+    </div>
+
+   
+  </div>
+  <script>
+  // Fixed demo accounts with fixed passwords
+  const users = {
+    "doctor@gmail.edu": { password: "Doctor@123", role: "Doctor" },
+    "patient@gmail.edu": { password: "Patient@123", role: "Patient" },      //fix gmail and passeords
+    "researcher@gmail.edu": { password: "Research@123", role: "Researcher" },
+    "admin@gmail.edu": { password: "Admin@123", role: "Admin" }
+  };
+
+  const FIXED_OTP = "489321";                  //fix opt
+  let loggedInUser = null;
+
+  const loginForm = document.getElementById('loginForm');
+  const otpForm = document.getElementById('otpForm');
+  const errorMsg = document.getElementById('errorMsg');
+  const otpErrorMsg = document.getElementById('otpErrorMsg');
+
+  loginForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value.trim();
+
+    if (username === '' || password === '') {
+      errorMsg.textContent = 'Please fill in all fields.';
+      return;
+    }
+
+    const user = users[username];
+
+   if (!user || user.password !== password) {
+  saveAccessLog(username || "Unknown", "Unknown", "Access Denied");
+  errorMsg.textContent = 'Access Denied. Invalid credentials.';
+  return;
+}              
+
+    loggedInUser = { email: username, role: user.role };
+    errorMsg.textContent = '';
+    loginForm.style.display = 'none';
+    otpForm.style.display = 'block';
+  });
+
+  otpForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const otp = document.getElementById('otp').value.trim();
+
+    if (otp === '') {
+      otpErrorMsg.textContent = 'Please enter the OTP.';
+      return;
+    }
+
+    if (otp !== FIXED_OTP) {
+      otpErrorMsg.textContent = 'Incorrect OTP. Try again.';
+      return;
+    }
+
+otpErrorMsg.style.color = '#2e7d32';
+    otpErrorMsg.textContent = `Access granted. Welcome, ${loggedInUser.role}!`;
+
+    // Save session info
+    sessionStorage.setItem('role', loggedInUser.role);
+    sessionStorage.setItem('email', loggedInUser.email);
+
+    // Log this login event permanently
+    saveAccessLog(loggedInUser.email, loggedInUser.role, 'Login');
+
+    setTimeout(() => {
+      window.location.href = 'dashboard.html';
+    }, 800);
+  });
+
+  // Function to save login/logout logs in localStorage (persists across sessions)
+  function saveAccessLog(email, role, action) {
+    const logs = JSON.parse(localStorage.getItem('accessLogs')) || [];
+    logs.push({
+      email: email,
+      role: role,
+      action: action,
+      time: new Date().toLocaleString()
+    });
+    localStorage.setItem('accessLogs', JSON.stringify(logs));
+  }
+  
+</script>
+</body>
+</html>

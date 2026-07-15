@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SecureHealth Portal | Dashboard</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="dashboard-container">
+    <div class="dashboard-header">
+      <div>
+        <h2 id="welcomeText">Welcome</h2>
+        <p id="roleText" class="role-tag"></p>
+      </div>
+      <button id="logoutBtn" class="logout-btn">Logout</button>
+    </div>
+
+    <div id="accessCards" class="cards-grid"></div>
+
+    <p id="noAccessMsg" class="no-access-msg" style="display:none;">
+       You do not have access to any health records under the current policy.
+    </p>
+  </div>
+
+<script>
+  const role = sessionStorage.getItem('role');
+  const email = sessionStorage.getItem('email');
+
+  // If no session found, redirect back to login
+  if (!role || !email) {
+    window.location.href = 'index.html';
+  }
+
+  document.getElementById('welcomeText').textContent = `Welcome, ${email}`;
+  document.getElementById('roleText').textContent = `Role: ${role}`;
+
+  // Show all record types to everyone — actual access is checked on each page
+  const accessMap = {
+    "Doctor": ["EMR", "EHR", "PHR"],
+    "Patient": ["EMR", "EHR", "PHR"],
+    "Researcher": ["EMR", "EHR", "PHR"],
+    "Admin": ["EMR", "EHR", "PHR"]
+  };
+
+  const recordInfo = {
+    "EMR": {
+      title: "EMR",
+      full: "Electronic Medical Records",
+      desc: "Clinical data from a single practice — diagnoses, treatments, and visit history."
+    },
+    "EHR": {
+      title: "EHR",
+      full: "Electronic Health Records",
+      desc: "Complete cross-provider medical history shared across healthcare organizations."
+    },
+    "PHR": {
+      title: "PHR",
+      full: "Personal Health Records",
+      desc: "Patient-managed health data including personal notes, medication logs, and history."
+    }
+  };
+
+  const cardsContainer = document.getElementById('accessCards');
+  const noAccessMsg = document.getElementById('noAccessMsg');
+  const allowed = accessMap[role] || [];
+
+  allowed.forEach(key => {
+    const info = recordInfo[key];
+    const card = document.createElement('div');
+    card.className = 'access-card';
+    card.innerHTML = `
+      <h3>${info.title}</h3>
+      <p class="card-subtitle">${info.full}</p>
+      <p class="card-desc">${info.desc}</p>
+      <button class="access-btn" onclick="window.location.href='${info.title.toLowerCase()}.html'">Open ${info.title}</button>
+    `;
+    cardsContainer.appendChild(card);
+  });
+
+  // Function to save login/logout logs (persists across sessions)
+  function saveAccessLog(email, role, action) {
+    const logs = JSON.parse(localStorage.getItem('accessLogs')) || [];
+    logs.push({
+      email: email,
+      role: role,
+      action: action,
+      time: new Date().toLocaleString()
+    });
+    localStorage.setItem('accessLogs', JSON.stringify(logs));
+  }
+
+  // Logout button
+  document.getElementById('logoutBtn').addEventListener('click', function () {
+    saveAccessLog(email, role, 'Logout');
+    sessionStorage.clear();
+    window.location.href = 'index.html';
+  });
+
+  // If Admin, show the access logs table
+  if (role === 'Admin') {
+    const logs = JSON.parse(localStorage.getItem('accessLogs')) || [];
+
+    const logsSection = document.createElement('div');
+    logsSection.className = 'logs-section';
+
+    let tableRows = '';
+    logs.slice().reverse().forEach(log => {
+      tableRows += `
+        <tr>
+          <td>${log.email}</td>
+          <td>${log.role}</td>
+          <td class="${log.action === 'Login' ? 'log-login' : 'log-logout'}">${log.action}</td>
+          <td>${log.time}</td>
+        </tr>
+      `;
+    });
+
+    logsSection.innerHTML = `
+      <h3 class="logs-title">SIEM Dashboard(Access Logs)</h3>
+      <div class="logs-scroll">
+        <table class="logs-table">
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Action</th>
+              <th>Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tableRows || '<tr><td colspan="4">No logs available yet.</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    document.querySelector('.dashboard-container').appendChild(logsSection);
+  }
+  function saveAccessLog(email, role, action) {
+  const logs = JSON.parse(localStorage.getItem('accessLogs')) || [];
+
+  logs.push({
+    email: email,
+    role: role,
+    action: action,
+    time: new Date().toLocaleString()
+  });
+
+  localStorage.setItem('accessLogs', JSON.stringify(logs));
+}
+  let timer;
+
+function resetTimer() {
+  clearTimeout(timer);
+
+  timer = setTimeout(() => {
+    saveAccessLog(email, role, "Auto Logout");
+    sessionStorage.clear();
+    window.location.href = "index.html";
+  }, 30000);
+}
+
+document.onclick = resetTimer;
+document.onmousemove = resetTimer;
+document.onkeydown = resetTimer;
+
+resetTimer();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SecureHealth Portal | PHR</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+  <div class="dashboard-header">
+    <div>
+      <h2>Personal Health Records (PHR)</h2>
+      <p class="role-tag">Patient-Managed Health Data</p>
+    </div>
+
+    <button onclick="window.location.href='dashboard.html'" class="logout-btn">
+      Back
+    </button>
+  </div>
+
+
+  <table class="logs-table">
+
+    <thead>
+      <tr>
+        <th>Category</th>
+        <th>Health Information</th>
+        <th>Notes</th>
+        <th>Date Logged</th>
+      </tr>
+    </thead>
+
+
+    <tbody>
+
+      <tr>
+        <td>Medication</td>
+        <td>Metformin 500mg</td>
+        <td>Daily dose after meal</td>
+        <td>05 July 2026</td>
+      </tr>
+
+
+      <tr>
+        <td>Vital Signs</td>
+        <td>Blood Pressure: 130/85</td>
+        <td>Measured at home</td>
+        <td>08 July 2026</td>
+      </tr>
+
+
+      <tr>
+        <td>Symptoms</td>
+        <td>Mild Headache</td>
+        <td>Rest and hydration advised</td>
+        <td>09 July 2026</td>
+      </tr>
+
+
+    </tbody>
+
+  </table>
+
+</div>
+
+
+<script>
+
+const role = sessionStorage.getItem('role');
+const allowedRoles = ['Patient', 'Admin'];
+
+if (!role || !allowedRoles.includes(role)) {
+
+document.querySelector('.dashboard-container').innerHTML = `
+
+<div class="dashboard-header">
+
+<h2>Personal Health Records (PHR)</h2>
+
+<button onclick="window.location.href='dashboard.html'" class="logout-btn">
+Back
+</button>
+
+</div>
+
+<p class="no-access-msg">
+⛔ Access Denied. You do not have permission to view PHR.
+</p>
+
+`;
+
+}
+function saveAccessLog(email, role, action) {
+  const logs = JSON.parse(localStorage.getItem('accessLogs')) || [];
+
+  logs.push({
+    email: email,
+    role: role,
+    action: action,
+    time: new Date().toLocaleString()
+  });
+
+  localStorage.setItem('accessLogs', JSON.stringify(logs));
+}
+const email = sessionStorage.getItem("email");
+
+function saveAccessLog(email, role, action) {
+  const logs = JSON.parse(localStorage.getItem("accessLogs")) || [];
+
+  logs.push({
+    email: email,
+    role: role,
+    action: action,
+    time: new Date().toLocaleString()
+  });
+
+  localStorage.setItem("accessLogs", JSON.stringify(logs));
+}
+
+let timer;
+
+function resetTimer() {
+  clearTimeout(timer);
+
+  timer = setTimeout(function () {
+    saveAccessLog(email, role, "Auto Logout");
+    sessionStorage.clear();
+    window.location.href = "index.html";
+  }, 30000);
+}
+
+document.addEventListener("mousemove", resetTimer);
+document.addEventListener("click", resetTimer);
+document.addEventListener("keydown", resetTimer);
+document.addEventListener("scroll", resetTimer);
+
+resetTimer();
+</script>
+
+
+</body>
+</html>
